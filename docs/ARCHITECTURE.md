@@ -3,7 +3,7 @@ This document serves as a critical, living template designed to equip agents wit
 understanding of the codebase's architecture, enabling efficient navigation and effective contribution from 
 day one. Update this document as the codebase evolves.
 
-## System Context Diagram
+Below is system context diagram to show high-level interaction between major components.
 
 ```mermaid
 architecture-beta
@@ -13,55 +13,73 @@ architecture-beta
     service db(database)[Database]
     service gov(internet)['data.gov.my']
 
-    u:R -- L:fe
+    u:R --> L:fe
     fe:R -- L:be
     be:R -- L:db
-    be:T -- B:gov
+    be:T <-- B:gov
 ```
 
 ## Core Components
 
-### Frontend
+### SPA
 
-Name: Single Page Application
-
-Description: Main user interface for interacting with the system, allowing user to search bus.
+Main user interface for interacting with the system.
 
 Technologies: Vue.js, shadcn/vue
 
-Deployment:
-
 ### Backend
 
-Modular monolith. Below are the core modules.
+Opted for modular monolith architecture, which allows clear boundaries and ability to scale to distributed architecture in future.
 
 Technologies: Go
-
-Deployment: 
-
-#### Bus Search
-
-#### Static Data Ingestion
 
 ### Data Stores
 
 #### PostgreSQL
 
-Name: Primary database
+Primary database. Below is the key entities relations.
 
-Type: PostgreSQL
+```mermaid
+erDiagram
+    agencies ||--o{ routes : "operates"
+    routes ||--o{ trips : "contains"
+    calendar ||--o{ trips : "defines_schedule"
+    shapes ||--o{ trips : "outlines"
+    trips ||--o{ stop_times : "follows"
+    trips ||--o{ frequencies : "repeats_at"
+    stops ||--o{ stop_times : "visited_at"
+```
 
-Purpose: GTFS static data, to allow user search public transportation static data.
+## Logical architecture
 
-Key Schemas/Tables:
-- agencies
-- calendar
-- frequencies
-- routes
-- shapes
-- stop_times
-- stops
-- trips
+Below diagram shows the interaction between logical components.
+
+```mermaid
+flowchart TD
+    A[User] --> B[Route search]
+    C[GTFS static data ingestion] --> D[Primary data store]
+    B --> D
+```
+
+## Physical Architecture
+
+Cloud services are provided by AWS.
+
+```mermaid
+architecture-beta
+    service u(user)[User]
+    service cf(logos:aws-cloudfront)[CloudFront]
+    service s3(logos:aws-s3)[S3]
+    service ecs(logos:aws-ecs)[ECS]
+    service rds(logos:aws-rds)[RDS]
+    service gov(internet)['data.gov.my']
+
+    u:R --> L:cf
+    cf:T <-- B:s3
+    cf:R -- L:ecs
+    ecs:R -- L:rds
+    ecs:T <-- B:gov
+```
 
 ## External Integrations / APIs
 
@@ -71,17 +89,12 @@ Purpose: Get GTFS static data from multiple agencies.
 
 Integration Method: REST API
 
-## Deployment and Infrastructure
-
-Cloud Provider: AWS
-
-Key Services Used: Kubernetes, EC2, RDS, S3, CloudFront
-
-CI/CD Pipeline: Github Actions
-
-Monitoring and Logging: Promethus, Grafana
-
 ## Security Consideration
 
 Data Encryption: TLS in transit
 
+## Glossary
+
+| Term | Description             |
+| ---- | ----------------------- |
+| SPA  | Single Page Application |
