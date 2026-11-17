@@ -28,8 +28,18 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) ([]string,
 
 	for _, feed := range feeds {
 		u := "https://api.data.gov.my/gtfs-static/" + feed.agency + "?category=" + feed.category
+
+		feedCtx, cancel := context.WithTimeout(ctx, 30 * time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(feedCtx, http.MethodGet, u, nil)
+		if err != nil {
+			return keys, fmt.Errorf("construct new http request: %w", err)
+		}
+
+		httpClient := http.Client{ Timeout: 10 * time.Second }
 	
-		resp, err := http.Get(u)
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			return keys, fmt.Errorf("GET '%s': %w", u, err)
 		}
