@@ -39,9 +39,29 @@ func TestGetStatic(t *testing.T) {
 		o.RequestChecksumCalculation = aws.RequestChecksumCalculationWhenRequired
 	})
 
-	n, err := GetStatic(ctx, client, bucket)
+	assertObjectNotEmpty := func(key string) {
+		meta, err := client.HeadObject(t.Context(), &s3.HeadObjectInput{ Bucket: new(bucket), Key: new(key) })
+		require.NoError(t, err)
+		assert.Positive(t, *meta.ContentLength)
+	}
+
+	countTotalObjects := func() int {
+		var n int
+		paginator := s3.NewListObjectsV2Paginator(client, &s3.ListObjectsV2Input{ Bucket: new(bucket) })
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			require.NoError(t, err)
+			n += len(page.Contents)
+		}
+
+		return n
+	}
+
+	keys, err := GetStatic(ctx, client, bucket)
 	
 	require.NoError(t, err)
-	assert.Equal(t, 5, n)
+	assert.Equal(t, len(keys), countTotalObjects())
+	for _, key := range keys {
+		assertObjectNotEmpty(key)
+	}
 }
-
