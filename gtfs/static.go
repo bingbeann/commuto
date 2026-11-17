@@ -15,7 +15,7 @@ type gtfsFeed struct {
 	category string
 }
 
-func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, error) {
+func GetStatic(ctx context.Context, client *s3.Client, bucket string) ([]string, error) {
 	feeds := []gtfsFeed{
 		{"ktmb", ""},
 		{"prasarana", "rapid-rail-kl"},
@@ -24,19 +24,21 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, erro
 		{"prasarana", "rapid-bus-mrtfeeder"},
 	}
 
-	for n, feed := range feeds {
+	keys := []string{}
+
+	for _, feed := range feeds {
 		u := "https://api.data.gov.my/gtfs-static/" + feed.agency + "?category=" + feed.category
 	
 		resp, err := http.Get(u)
 		if err != nil {
-			return n, fmt.Errorf("GET '%s': %w", u, err)
+			return keys, fmt.Errorf("GET '%s': %w", u, err)
 		}
 		defer func() {
 			_ = resp.Body.Close()
 		}()
 
 		if resp.StatusCode >= 400 {
-			return n, fmt.Errorf("GET '%s': failed with status code %d", u, resp.StatusCode)
+			return keys, fmt.Errorf("GET '%s': failed with status code %d", u, resp.StatusCode)
 		}
 
 		key := fmt.Sprintf("%s_%s.gtfs.zip", feed.agency, feed.category)
@@ -48,7 +50,7 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, erro
 			Body: resp.Body,
 		})
 		if err != nil {
-			return n, fmt.Errorf("s3 put object '%s': %w", key, err)
+			return keys, fmt.Errorf("s3 put object '%s': %w", key, err)
 		}
 
 		err = s3.NewObjectExistsWaiter(client).Wait(
@@ -60,9 +62,11 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, erro
 			time.Minute,
 		)
 		if err != nil {
-			return n, fmt.Errorf("s3 wait for object '%s' to exist: %w", key, err)
+			return keys, fmt.Errorf("s3 wait for object '%s' to exist: %w", key, err)
 		}
+
+		keys = append(keys, key)
 	}
 
-	return len(feeds), nil
+	return keys, nil
 }
