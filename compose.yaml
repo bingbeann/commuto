@@ -36,4 +36,4 @@ services:
           }
         ]
       }' > /etc/seaweedfs/config.json && \
-      weed server -s3 -filer -s3.config /etc/seaweedfs/config.json"
+      weed server -dir=/data -s3 -filer -s3.config /etc/seaweedfs/config.json"
