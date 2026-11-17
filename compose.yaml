@@ -1,0 +1,39 @@
+services:
+  seaweedfs-s3:
+    image: chrislusf/seaweedfs
+    restart: unless-stopped
+    ports:
+      - "8333:8333"
+      - "9333:9333"
+      - "8888:8888"
+    volumes:
+      - ".data/seaweedfs:/data"
+    entrypoint: /bin/sh -c
+    command: |
+      "echo '{
+        \"identities\": [
+          {
+            \"name\": \"anonymous\",
+            \"actions\": [
+              \"Read\"
+            ]
+          },
+          {
+            \"name\": \"some_admin_user\",
+            \"credentials\": [
+              {
+                \"accessKey\": \"key\",
+                \"secretKey\": \"secret\"
+              }
+            ],
+            \"actions\": [
+              \"Admin\",
+              \"Read\",
+              \"List\",
+              \"Tagging\",
+              \"Write\"
+            ]
+          }
+        ]
+      }' > /etc/seaweedfs/config.json && \
+      weed server -s3 -filer -s3.config /etc/seaweedfs/config.json"
