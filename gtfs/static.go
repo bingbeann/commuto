@@ -48,7 +48,7 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, erro
 			Body: resp.Body,
 		})
 		if err != nil {
-			return n, fmt.Errorf("s3 put object %s: %w", key, err)
+			return n, fmt.Errorf("s3 put object '%s': %w", key, err)
 		}
 
 		err = s3.NewObjectExistsWaiter(client).Wait(
@@ -60,7 +60,7 @@ func GetStatic(ctx context.Context, client *s3.Client, bucket string) (int, erro
 			time.Minute,
 		)
 		if err != nil {
-			return n, fmt.Errorf("s3 wait for object %s to exist: %w", key, err)
+			return n, fmt.Errorf("s3 wait for object '%s' to exist: %w", key, err)
 		}
 	}
 
