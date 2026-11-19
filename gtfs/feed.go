@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type Feed struct {
@@ -36,7 +37,10 @@ func (c *FeedClient) DownloadFeed(ctx context.Context, f Feed) ([]byte, error) {
 		u.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	downloadCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(downloadCtx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("construct new http request: %w", err)
 	}
