@@ -1,4 +1,5 @@
 //go:build integration
+
 package blob
 
 import (
@@ -13,21 +14,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUploadFile(t *testing.T) {
+func TestUpload(t *testing.T) {
 	s3Client := newS3Client(t)
 	uploader := transfermanager.New(s3Client)
 	waiter := s3.NewObjectExistsWaiter(s3Client)
 
-	err := UploadFile(t.Context(), uploader, waiter, "gtfs", "tmp", strings.NewReader("this is just for testing"))
+	s := &Service{
+		Uploader: uploader,
+		Waiter:   waiter,
+	}
+
+	err := s.Upload(t.Context(), "gtfs", "tmp", strings.NewReader("this is just for testing"))
 
 	require.NoError(t, err)
 }
 
 func newS3Client(t *testing.T) *s3.Client {
 	envs := map[string]string{
-		"AWS_ENDPOINT_URL_S3": "http://localhost:8333",
-		"AWS_REGION": "ap-southeast-3",
-		"AWS_ACCESS_KEY_ID": "key",
+		"AWS_ENDPOINT_URL_S3":   "http://localhost:8333",
+		"AWS_REGION":            "ap-southeast-3",
+		"AWS_ACCESS_KEY_ID":     "key",
 		"AWS_SECRET_ACCESS_KEY": "secret",
 	}
 	for k, v := range envs {
