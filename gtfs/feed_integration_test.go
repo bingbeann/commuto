@@ -21,6 +21,7 @@ func TestDownloadFeed_ReturnsSuccess(t *testing.T) {
 		_, err := fmt.Fprintf(w, "UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==")
 		require.NoError(t, err)
 	}))
+	t.Cleanup(server.Close)
 
 	c := &FeedClient{
 		baseURL: server.URL,
@@ -37,6 +38,7 @@ func TestDownloadFeed_ReturnsErr(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}))
+	t.Cleanup(server.Close)
 
 	c := &FeedClient{
 		baseURL: server.URL,
