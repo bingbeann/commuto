@@ -1,4 +1,5 @@
 //go:build integration
+
 package gtfs
 
 import (
@@ -23,11 +24,11 @@ func TestDownloadFeed_ReturnsSuccess(t *testing.T) {
 
 	c := &FeedClient{
 		baseURL: server.URL,
-		client: &http.Client{},
+		client:  &http.Client{},
 	}
 
-	b, err := c.DownloadFeed(t.Context(), feed{"prasarana", "rapid-bus-kl"})
-	
+	b, err := c.DownloadFeed(t.Context(), Feed{"prasarana", "rapid-bus-kl"})
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, b)
 }
@@ -39,21 +40,21 @@ func TestDownloadFeed_ReturnsErr(t *testing.T) {
 
 	c := &FeedClient{
 		baseURL: server.URL,
-		client: &http.Client{},
+		client:  &http.Client{},
 	}
 
-	_, err := c.DownloadFeed(t.Context(), feed{"prasarana", "rapid-bus-kl"})
-	
+	_, err := c.DownloadFeed(t.Context(), Feed{"prasarana", "rapid-bus-kl"})
+
 	require.Error(t, err)
 }
 
 func TestDownloadFeed_WithBadURL_ReturnsErr(t *testing.T) {
 	c := &FeedClient{
 		baseURL: "htp:/domain.bad",
-		client: &http.Client{},
+		client:  &http.Client{},
 	}
 
-	_, err := c.DownloadFeed(t.Context(), feed{"prasarana", "rapid-bus-kl"})
-	
+	_, err := c.DownloadFeed(t.Context(), Feed{"prasarana", "rapid-bus-kl"})
+
 	require.Error(t, err)
 }

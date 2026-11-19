@@ -8,9 +8,9 @@ import (
 	"net/url"
 )
 
-type feed struct {
-	agency   string
-	category string
+type Feed struct {
+	Agency   string
+	Category string
 }
 
 type FeedClient struct {
@@ -18,8 +18,8 @@ type FeedClient struct {
 	client  *http.Client
 }
 
-func (c *FeedClient) DownloadFeed(ctx context.Context, f feed) ([]byte, error) {
-	p, err := url.JoinPath(c.baseURL, f.agency)
+func (c *FeedClient) DownloadFeed(ctx context.Context, f Feed) ([]byte, error) {
+	p, err := url.JoinPath(c.baseURL, f.Agency)
 	if err != nil {
 		return nil, fmt.Errorf("join path: %w", err)
 	}
@@ -29,9 +29,9 @@ func (c *FeedClient) DownloadFeed(ctx context.Context, f feed) ([]byte, error) {
 		return nil, fmt.Errorf("parse baseURL: %w", err)
 	}
 
-	if f.category != "" {
+	if f.Category != "" {
 		q := u.Query()
-		q.Set("category", f.category)
+		q.Set("category", f.Category)
 
 		u.RawQuery = q.Encode()
 	}
