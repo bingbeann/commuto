@@ -46,12 +46,5 @@ jobs:
         with:
           go-version-file: go.mod
 
-      # - name: Create default bucket
-      #   run: aws s3 mb s3://my-default-bucket --endpoint-url http://localhost:9000 || true
-      #   env:
-      #     AWS_ACCESS_KEY_ID: key
-      #     AWS_SECRET_ACCESS_KEY: secret
-      #     AWS_DEFAULT_REGION: ap-southeast-3
-
       - name: Run tests
         run: go test -tags=integration,e2e ./...
