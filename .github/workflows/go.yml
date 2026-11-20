@@ -21,44 +21,22 @@ jobs:
   test:
     runs-on: ubuntu-latest
     services:
-      seaweedfs-s3:
-        image: chrislusf/seaweedfs
+      rustfs:
+        image: rustfs/rustfs:latest
         ports:
-          - 8333:8333
-        entrypoint: /bin/sh
-        command:
-          - -c
-          - |
-            set -e
-            cat <<'EOF' > /etc/seaweedfs/config.json
-            {
-              "identities": [
-                {
-                  "name": "anonymous",
-                  "actions": [
-                    "Read"
-                  ]
-                },
-                {
-                  "name": "some_admin_user",
-                  "credentials": [
-                    {
-                      "accessKey": "key",
-                      "secretKey": "secret"
-                    }
-                  ],
-                  "actions": [
-                    "Admin",
-                    "Read",
-                    "List",
-                    "Tagging",
-                    "Write"
-                  ]
-                }
-              ]
-            }
-            EOF
-            exec weed server -dir=/data -s3 -s3.config=/etc/seaweedfs/config.json
+          - 9000:9000
+        env:
+          RUSTFS_ACCESS_KEY: key
+          RUSTFS_SECRET_KEY: secret
+          RUSTFS_ADDRESS: 0.0.0.0:9000
+          RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+          RUSTFS_CONSOLE_ENABLE: true
+        options: >-
+          --health-cmd "curl -sf http://localhost:9000/health || exit 1"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+          --health-start-period 5s
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -67,6 +45,13 @@ jobs:
         uses: actions/setup-go@v7.1.0
         with:
           go-version-file: go.mod
+
+      # - name: Create default bucket
+      #   run: aws s3 mb s3://my-default-bucket --endpoint-url http://localhost:9000 || true
+      #   env:
+      #     AWS_ACCESS_KEY_ID: key
+      #     AWS_SECRET_ACCESS_KEY: secret
+      #     AWS_DEFAULT_REGION: ap-southeast-3
 
       - name: Run tests
         run: go test -tags=integration,e2e ./...

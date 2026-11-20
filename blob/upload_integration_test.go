@@ -15,23 +15,29 @@ import (
 )
 
 func TestUpload(t *testing.T) {
+	ctx := t.Context()
+	bucket := "my-default-bucket"
 	s3Client := newS3Client(t)
 	uploader := transfermanager.New(s3Client)
 	waiter := s3.NewObjectExistsWaiter(s3Client)
+
+	out, err := s3Client.CreateBucket(ctx, &s3.CreateBucketInput{ Bucket: new(bucket) })
+	require.NoError(t, err)
+	t.Logf("create bucket out: %v", out)
 
 	s := &Service{
 		Uploader: uploader,
 		Waiter:   waiter,
 	}
 
-	err := s.Upload(t.Context(), "gtfs", "tmp", strings.NewReader("this is just for testing"))
+	err = s.Upload(ctx, bucket, "tmp", strings.NewReader("this is just for testing"))
 
 	require.NoError(t, err)
 }
 
 func newS3Client(t *testing.T) *s3.Client {
 	envs := map[string]string{
-		"AWS_ENDPOINT_URL_S3":   "http://localhost:8333",
+		"AWS_ENDPOINT_URL_S3":   "http://localhost:9000",
 		"AWS_REGION":            "ap-southeast-3",
 		"AWS_ACCESS_KEY_ID":     "key",
 		"AWS_SECRET_ACCESS_KEY": "secret",
