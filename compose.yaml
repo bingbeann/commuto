@@ -1,0 +1,41 @@
+services:
+  rustfs:
+    image: rustfs/rustfs:latest
+    platform: linux/amd64
+    ports:
+      - "9000:9000" # S3 API endpoint
+      - "9001:9001" # Web console
+    environment:
+      - RUSTFS_ACCESS_KEY=key
+      - RUSTFS_SECRET_KEY=secret
+      - RUSTFS_ADDRESS=0.0.0.0:9000
+      - RUSTFS_CONSOLE_ADDRESS=0.0.0.0:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+    volumes:
+      - ./.data/rustfs:/data
+      - ./.logs/rustfs:/logs
+    command: ["/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  rustfs-init:
+    image: amazon/aws-cli:latest
+    container_name: rustfs-init
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: key
+      AWS_SECRET_ACCESS_KEY: secret
+      AWS_DEFAULT_REGION: ap-southeast-3
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://my-default-bucket || true
+        aws --endpoint-url http://rustfs:9000 s3 mb s3://app-uploads || true
+    restart: no
